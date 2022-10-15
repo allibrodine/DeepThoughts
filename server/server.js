@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 // import ApolloServer
 const { ApolloServer } = require('apollo-server-express');
 const { authMiddleware } = require('./utils/auth');
@@ -26,6 +27,19 @@ const startApolloServer = async (typeDefs, resolvers) => {
 await server.start();
 // integrate our Apollo server with the Express application as middleware
 server.applyMiddleware({ app });
+
+//serve up static assets...check to see if Node environment is in production
+if (process.env.NODE_ENV === 'production') {
+  //instruct Express server to serve any files in the React app 'build' directory
+  app.use(express.static(path.join(__dirname, '../client/build')));
+}
+
+//wildcard GET route
+app.get('*', (req, res) => {
+  //if a request is made to a location on the server that doesn't havea route defined, respond with 
+  //production-ready React front-end code
+  res.sendFile(path.join(__dirname, '../client/build/index.html'));
+});
 
 db.once('open', () => {
     app.listen(PORT, () => {
